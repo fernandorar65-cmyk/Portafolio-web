@@ -6,7 +6,8 @@ export function ColorPalettePicker() {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const { palette, palettes, setPalette } = useTheme()
+  const colorInputRef = useRef<HTMLInputElement>(null)
+  const { palette, palettes, customColor, setPalette, setCustomColor } = useTheme()
 
   useEffect(() => {
     setMounted(true)
@@ -34,6 +35,8 @@ export function ColorPalettePicker() {
 
   if (!mounted) return null
 
+  const isCustomActive = palette === 'custom'
+
   return createPortal(
     <div className="palette-fab" ref={rootRef}>
       <div
@@ -43,28 +46,53 @@ export function ColorPalettePicker() {
         aria-label="Seleccionar paleta de colores"
         aria-hidden={!open}
       >
-        <p className="palette-fab__title">Paleta de colores</p>
-        <ul className="palette-fab__list">
+        <p className="palette-fab__title">Predefinidos</p>
+        <ul className="palette-fab__grid">
           {palettes.map((item) => (
             <li key={item.id}>
               <button
                 type="button"
-                className={`palette-swatch${palette === item.id ? ' palette-swatch--active' : ''}`}
+                className={`palette-dot${palette === item.id ? ' palette-dot--active' : ''}`}
                 style={{ '--swatch-color': item.swatch } as React.CSSProperties}
-                onClick={() => {
-                  setPalette(item.id)
-                  setOpen(false)
-                }}
+                onClick={() => setPalette(item.id)}
                 aria-label={`Paleta ${item.name}`}
                 aria-pressed={palette === item.id}
                 title={item.name}
               >
-                <span className="palette-swatch__color" />
-                <span className="palette-swatch__name">{item.name}</span>
+                <span className="palette-dot__color" />
               </button>
             </li>
           ))}
         </ul>
+
+        <div className="palette-fab__divider" aria-hidden="true" />
+
+        <p className="palette-fab__title">Color personalizado</p>
+        <div
+          className={`palette-fab__custom${isCustomActive ? ' palette-fab__custom--active' : ''}`}
+        >
+          <button
+            type="button"
+            className="palette-fab__picker-btn"
+            onClick={() => colorInputRef.current?.click()}
+            aria-label="Abrir selector de color"
+          >
+            <span
+              className="palette-fab__picker-preview"
+              style={{ backgroundColor: customColor }}
+            />
+            <span className="palette-fab__picker-label">Elegir color</span>
+          </button>
+          <input
+            ref={colorInputRef}
+            type="color"
+            className="palette-fab__color-input"
+            value={customColor}
+            onChange={(event) => setCustomColor(event.target.value)}
+            aria-label="Selector de color personalizado"
+          />
+          <code className="palette-fab__hex">{customColor.toUpperCase()}</code>
+        </div>
       </div>
 
       <button

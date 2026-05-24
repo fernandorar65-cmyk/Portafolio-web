@@ -9,25 +9,34 @@ import {
 } from 'react'
 import {
   colorPalettes,
+  DEFAULT_CUSTOM_COLOR,
   DEFAULT_PALETTE,
   isPaletteId,
   type ColorPalette,
   type PaletteId,
 } from '../data/palettes'
+import {
+  applyCustomAccent,
+  clearCustomAccent,
+  normalizeHex,
+} from '../lib/colorUtils'
 
 export type Theme = 'light' | 'dark'
 
 type ThemeContextValue = {
   theme: Theme
   palette: PaletteId
+  customColor: string
   palettes: ColorPalette[]
   toggleTheme: () => void
   setPalette: (palette: PaletteId) => void
+  setCustomColor: (hex: string) => void
   isDark: boolean
 }
 
 const THEME_STORAGE_KEY = 'theme'
 const PALETTE_STORAGE_KEY = 'palette'
+const CUSTOM_COLOR_STORAGE_KEY = 'customColor'
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
@@ -43,16 +52,29 @@ function getStoredPalette(): PaletteId | null {
   return null
 }
 
+function getStoredCustomColor(): string {
+  const stored = localStorage.getItem(CUSTOM_COLOR_STORAGE_KEY)
+  return normalizeHex(stored ?? '') ?? DEFAULT_CUSTOM_COLOR
+}
+
 function getSystemTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-function applySettings(theme: Theme, palette: PaletteId) {
+function applySettings(theme: Theme, palette: PaletteId, customColor: string) {
   const root = document.documentElement
   root.setAttribute('data-theme', theme)
   root.setAttribute('data-palette', palette)
+
+  if (palette === 'custom') {
+    applyCustomAccent(root, customColor, theme)
+  } else {
+    clearCustomAccent(root)
+  }
+
   localStorage.setItem(THEME_STORAGE_KEY, theme)
   localStorage.setItem(PALETTE_STORAGE_KEY, palette)
+  localStorage.setItem(CUSTOM_COLOR_STORAGE_KEY, customColor)
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -62,10 +84,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [palette, setPaletteState] = useState<PaletteId>(
     () => getStoredPalette() ?? DEFAULT_PALETTE,
   )
+  const [customColor, setCustomColorState] = useState<string>(() =>
+    getStoredCustomColor(),
+  )
 
   useEffect(() => {
-    applySettings(theme, palette)
-  }, [theme, palette])
+    applySettings(theme, palette, customColor)
+  }, [theme, palette, customColor])
 
   const toggleTheme = useCallback(() => {
     setTheme((current) => (current === 'light' ? 'dark' : 'light'))
@@ -75,16 +100,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setPaletteState(nextPalette)
   }, [])
 
+  const setCustomColor = useCallback((hex: string) => {
+    const normalized = normalizeHex(hex) ?? DEFAULT_CUSTOM_COLOR
+    setCustomColorState(normalized)
+    setPaletteState('custom')
+  }, [])
+
   const value = useMemo(
     () => ({
       theme,
       palette,
+      customColor,
       palettes: colorPalettes,
       toggleTheme,
       setPalette,
+      setCustomColor,
       isDark: theme === 'dark',
     }),
-    [theme, palette, toggleTheme, setPalette],
+    [theme, palette, customColor, toggleTheme, setPalette, setCustomColor],
   )
 
   return (

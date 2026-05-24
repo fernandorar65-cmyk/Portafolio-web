@@ -26,12 +26,34 @@
             : prefersDark
               ? 'dark'
               : 'light'
-        var palettes = ['violet', 'ocean', 'emerald', 'coral', 'amber']
+        var palettes = [
+          'violet',
+          'ocean',
+          'emerald',
+          'coral',
+          'amber',
+          'indigo',
+          'fuchsia',
+          'pink',
+          'teal',
+          'lime',
+          'ruby',
+          'sunset',
+        ]
+        var customColor = localStorage.getItem('customColor') || '#9333ea'
         var palette =
-          palettes.indexOf(storedPalette) !== -1 ? storedPalette : 'violet'
+          storedPalette === 'custom'
+            ? 'custom'
+            : palettes.indexOf(storedPalette) !== -1
+              ? storedPalette
+              : 'violet'
         var root = document.documentElement
         root.setAttribute('data-theme', theme)
         root.setAttribute('data-palette', palette)
+        if (palette === 'custom') {
+          root.style.setProperty('--accent', customColor)
+          root.style.setProperty('--accent-2', customColor)
+        }
       })()
     </script>
   </head>
