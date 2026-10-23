@@ -1,5 +1,5 @@
 export const profile = {
-  name: 'Alpakino',
+  name: 'Fernando Aquino Iman',
   role: 'Ingeniero de Software con experiencia en desarrollo web y mobile',
   tagline:
     'Construyo experiencias web rápidas, accesibles y con atención al detalle.',
